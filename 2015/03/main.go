@@ -11,14 +11,16 @@ type coordinates struct {
 }
 
 var m = map[int32]coordinates{
-	'^': coordinates{0, 1},
-	'v': coordinates{0, -1},
-	'<': coordinates{-1, 0},
-	'>': coordinates{1, 0},
+	'^': {0, 1},
+	'v': {0, -1},
+	'<': {-1, 0},
+	'>': {1, 0},
 }
 
 func part1(input string) int {
-	visits := map[string]int{"0,0": 1}
+	visits := map[coordinates]bool{
+		coordinates{0, 0}: true,
+	}
 	coords := coordinates{0, 0}
 
 	for _, move := range input {
@@ -26,33 +28,32 @@ func part1(input string) int {
 		coords.X += moveCoords.X
 		coords.Y += moveCoords.Y
 
-		position := fmt.Sprintf("%d,%d", coords.X, coords.Y)
-		visits[position] += 1
+		visits[coords] = true
 	}
 	return len(visits)
 }
 
 func part2(input string) int {
-	visits := map[string]int{"0,0": 1}
+	visits := map[coordinates]bool{
+		coordinates{0, 0}: true,
+	}
 	santaCoords := coordinates{0, 0}
 	roboSantaCoords := coordinates{0, 0}
 
 	for i, move := range input {
-		moveCoords := m[move]
-		var position string
-
 		// Santa goes first then alternates (even turns)
+		var currentSanta *coordinates
 		if i%2 == 0 {
-			santaCoords.X += moveCoords.X
-			santaCoords.Y += moveCoords.Y
-			position = fmt.Sprintf("%d,%d", santaCoords.X, santaCoords.Y)
+			currentSanta = &santaCoords
 		} else {
-			roboSantaCoords.X += moveCoords.X
-			roboSantaCoords.Y += moveCoords.Y
-			position = fmt.Sprintf("%d,%d", roboSantaCoords.X, roboSantaCoords.Y)
+			currentSanta = &roboSantaCoords
 		}
 
-		visits[position] += 1
+		moveCoords := m[move]
+		currentSanta.X += moveCoords.X
+		currentSanta.Y += moveCoords.Y
+
+		visits[*currentSanta] = true
 	}
 	return len(visits)
 }
