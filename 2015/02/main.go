@@ -23,7 +23,19 @@ func part1(input []string) int {
 }
 
 func part2(input []string) int {
-	return 1
+	total := 0
+	for _, dimensions := range input {
+		split := strings.Split(dimensions, "x")
+
+		l, _ := strconv.Atoi(split[0])
+		w, _ := strconv.Atoi(split[1])
+		h, _ := strconv.Atoi(split[2])
+
+		smallestPerimeter := 2 * (l + w + h - max(l, w, h))
+		volume := l * w * h
+		total += smallestPerimeter + volume
+	}
+	return total
 }
 
 func main() {
