@@ -18,8 +18,8 @@ func solve(input []string) (int, int) {
 		h, _ := strconv.Atoi(split[2])
 
 		totalSurfaceArea := 2 * (l*w + w*h + l*h)
-		smallestSideArea := l * w * h / max(l, w, h)
-		smallestPerimeter := 2 * (l + w + h - max(l, w, h))
+		smallestSideArea := min(l*w, w*h, l*h)
+		smallestPerimeter := 2 * min(l+w, w+h, l+h)
 		totalVolume := l * w * h
 
 		wrappingPaperArea += totalSurfaceArea + smallestSideArea
