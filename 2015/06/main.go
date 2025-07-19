@@ -12,39 +12,45 @@ type coords struct {
 	Y int
 }
 
-func apply(lights *[][1000]bool, start coords, end coords, command string) {
+func apply(lights *[][1000]bool, dynamicLights *[][1000]int, start coords, end coords, command string) {
 	// Use the first 8 characters of the command to determine the type of operation
 	if command == "turn on " {
 		for x := start.X; x <= end.X; x++ {
 			for y := start.Y; y <= end.Y; y++ {
 				(*lights)[x][y] = true
+				(*dynamicLights)[x][y]++
 			}
 		}
 	} else if command == "turn off" {
 		for x := start.X; x <= end.X; x++ {
 			for y := start.Y; y <= end.Y; y++ {
 				(*lights)[x][y] = false
+				if (*dynamicLights)[x][y] > 0 {
+					(*dynamicLights)[x][y]--
+				}
 			}
 		}
 	} else {
 		for x := start.X; x <= end.X; x++ {
 			for y := start.Y; y <= end.Y; y++ {
 				(*lights)[x][y] = !(*lights)[x][y]
+				(*dynamicLights)[x][y] += 2
 			}
 		}
 	}
 }
 
-func countLightsOn(lights [][1000]bool) int {
-	count := 0
+func countLightsOn(lights [][1000]bool, dynamicLights [][1000]int) (int, int) {
+	count, brightness := 0, 0
 	for x := 0; x < len(lights); x++ {
 		for y := 0; y < len(lights[x]); y++ {
 			if lights[x][y] {
 				count++
 			}
+			brightness += dynamicLights[x][y]
 		}
 	}
-	return count
+	return count, brightness
 }
 
 func solve(input []string) (int, int) {
@@ -52,6 +58,7 @@ func solve(input []string) (int, int) {
 	part2 := 0
 
 	lights := make([][1000]bool, 1000)
+	dynamicLights := make([][1000]int, 1000)
 	r := regexp.MustCompile(`(\d*),(\d*) through (\d*),(\d*)$`)
 
 	for _, command := range input {
@@ -63,10 +70,10 @@ func solve(input []string) (int, int) {
 		end.X, _ = strconv.Atoi(matches[3])
 		end.Y, _ = strconv.Atoi(matches[4])
 
-		apply(&lights, start, end, command[:8])
+		apply(&lights, &dynamicLights, start, end, command[:8])
 	}
 
-	part1 = countLightsOn(lights)
+	part1, part2 = countLightsOn(lights, dynamicLights)
 	return part1, part2
 }
 
