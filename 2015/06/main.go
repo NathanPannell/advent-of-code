@@ -5,23 +5,48 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
+
+const gridSize = 1000
+
+var commandRegex = regexp.MustCompile(`(\d*),(\d*) through (\d*),(\d*)$`)
 
 type coords struct {
 	X int
 	Y int
 }
 
-func apply(lights *[][1000]bool, dynamicLights *[][1000]int, start coords, end coords, command string) {
-	// Use the first 8 characters of the command to determine the type of operation
-	if command == "turn on " {
+type CommandType int
+
+const (
+	TurnOn CommandType = iota
+	TurnOff
+	Toggle
+	Default
+)
+
+func getCommandType(command string) CommandType {
+	if strings.HasPrefix(command, "turn on") {
+		return TurnOn
+	} else if strings.HasPrefix(command, "turn off") {
+		return TurnOff
+	} else if strings.HasPrefix(command, "toggle") {
+		return Toggle
+	}
+	return Default
+}
+
+func apply(lights *[][gridSize]bool, dynamicLights *[][gridSize]int, start coords, end coords, commandType CommandType) {
+	switch commandType {
+	case TurnOn:
 		for x := start.X; x <= end.X; x++ {
 			for y := start.Y; y <= end.Y; y++ {
 				(*lights)[x][y] = true
 				(*dynamicLights)[x][y]++
 			}
 		}
-	} else if command == "turn off" {
+	case TurnOff:
 		for x := start.X; x <= end.X; x++ {
 			for y := start.Y; y <= end.Y; y++ {
 				(*lights)[x][y] = false
@@ -30,7 +55,7 @@ func apply(lights *[][1000]bool, dynamicLights *[][1000]int, start coords, end c
 				}
 			}
 		}
-	} else {
+	case Toggle:
 		for x := start.X; x <= end.X; x++ {
 			for y := start.Y; y <= end.Y; y++ {
 				(*lights)[x][y] = !(*lights)[x][y]
@@ -40,7 +65,7 @@ func apply(lights *[][1000]bool, dynamicLights *[][1000]int, start coords, end c
 	}
 }
 
-func countLightsOn(lights [][1000]bool, dynamicLights [][1000]int) (int, int) {
+func countLightsOn(lights [][gridSize]bool, dynamicLights [][gridSize]int) (int, int) {
 	count, brightness := 0, 0
 	for x := 0; x < len(lights); x++ {
 		for y := 0; y < len(lights[x]); y++ {
@@ -57,20 +82,20 @@ func solve(input []string) (int, int) {
 	part1 := 0
 	part2 := 0
 
-	lights := make([][1000]bool, 1000)
-	dynamicLights := make([][1000]int, 1000)
-	r := regexp.MustCompile(`(\d*),(\d*) through (\d*),(\d*)$`)
+	lights := make([][gridSize]bool, gridSize)
+	dynamicLights := make([][gridSize]int, gridSize)
 
 	for _, command := range input {
 		start, end := coords{}, coords{}
 
-		matches := r.FindStringSubmatch(command)
+		matches := commandRegex.FindStringSubmatch(command)
 		start.X, _ = strconv.Atoi(matches[1])
 		start.Y, _ = strconv.Atoi(matches[2])
 		end.X, _ = strconv.Atoi(matches[3])
 		end.Y, _ = strconv.Atoi(matches[4])
 
-		apply(&lights, &dynamicLights, start, end, command[:8])
+		commandType := getCommandType(command)
+		apply(&lights, &dynamicLights, start, end, commandType)
 	}
 
 	part1, part2 = countLightsOn(lights, dynamicLights)
